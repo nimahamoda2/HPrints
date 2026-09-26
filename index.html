@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>إدارة المطبعة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EFE9DC; --surface:#FBF8F1; --ink:#201B15; --ink-soft:#5b5346;
+  --line:#C9BFA8; --red:#B23A2E; --red-soft:#e7cfc9; --teal:#2F6F62; --teal-soft:#d9e6e0;
+  --danger-bg:#f6d8d3;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#1c1912; --surface:#262119; --ink:#EFE9DC; --ink-soft:#b7ac95;
+    --line:#4a4130; --red:#e0685a; --red-soft:#4a2b26; --teal:#5fb3a0; --teal-soft:#233b34;
+    --danger-bg:#4a2b26;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1c1912; --surface:#262119; --ink:#EFE9DC; --ink-soft:#b7ac95;
+  --line:#4a4130; --red:#e0685a; --red-soft:#4a2b26; --teal:#5fb3a0; --teal-soft:#233b34;
+  --danger-bg:#4a2b26;
+}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:'Tajawal',sans-serif;font-size:15px}
+h1,h2,h3{font-family:'Reem Kufi',sans-serif;font-weight:600;margin:0}
+*{box-sizing:border-box}
+header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:2px solid var(--ink);
+  padding:calc(14px + env(safe-area-inset-top,0px)) 18px 14px}
+header h1{font-size:22px;letter-spacing:.5px}
+header p{margin:4px 0 0;color:var(--ink-soft);font-size:13px}
+nav{display:flex;gap:6px;padding:10px 18px;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--paper)}
+nav button{flex:0 0 auto;background:none;border:1px solid var(--line);color:var(--ink-soft);
+  padding:8px 16px;border-radius:2px;font-family:'Tajawal';font-size:14px;font-weight:700;cursor:pointer}
+nav button.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+main{max-width:900px;margin:0 auto;padding:18px;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+.tab{display:none}.tab.active{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:16px;margin-bottom:16px}
+.card h2{font-size:17px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.field{flex:1 1 140px;display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:12px;color:var(--ink-soft)}
+input,select{background:var(--paper);border:1px solid var(--line);color:var(--ink);border-radius:2px;
+  padding:9px 10px;font-family:'Tajawal';font-size:14px;width:100%}
+input:focus,select:focus{outline:2px solid var(--red);outline-offset:1px}
+button.btn{background:var(--red);color:#fff;border:none;padding:10px 18px;border-radius:2px;
+  font-family:'Tajawal';font-weight:700;font-size:14px;cursor:pointer}
+button.btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+button.btn.small{padding:5px 10px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--ink-soft);font-weight:700;font-size:12px}
+tr.low td{background:var(--danger-bg)}
+.tag{display:inline-block;background:var(--teal-soft);color:var(--teal);border-radius:2px;padding:2px 8px;font-size:12px;font-weight:700}
+.overflow{overflow-x:auto}
+.empty{color:var(--ink-soft);text-align:center;padding:24px 0}
+.stat{display:flex;gap:14px;flex-wrap:wrap}
+.stat div{flex:1 1 140px;background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:12px}
+.stat .num{font-family:'Reem Kufi';font-size:24px}
+.stat .lbl{font-size:12px;color:var(--ink-soft)}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.x{color:var(--red);cursor:pointer;font-weight:900;padding:0 6px}
+.alert-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:2px;background:var(--danger-bg);margin-bottom:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>إدارة المطبعة والمكتبة</h1>
+  <p>الأصناف · المبيعات · التقارير · تنبيهات المخزون</p>
+</header>
+<nav>
+  <button data-tab="items" class="active">الأصناف والخدمات</button>
+  <button data-tab="sales">المبيعات والطلبات</button>
+  <button data-tab="reports">التقارير</button>
+  <button data-tab="alerts">تنبيهات المخزون <span id="alertCount"></span></button>
+</nav>
+<main>
+
+<section id="items" class="tab active">
+  <div class="card">
+    <h2>إضافة صنف أو خدمة</h2>
+    <div class="row">
+      <div class="field"><label>الاسم</label><input id="i_name" placeholder="ورق A4 لامع"></div>
+      <div class="field"><label>التصنيف</label>
+        <select id="i_cat"><option>ورق</option><option>أكواب</option><option>تصميم حسب الطلب</option><option>طباعة</option><option>قرطاسية</option><option>أخرى</option></select>
+      </div>
+      <div class="field"><label>الوحدة</label><input id="i_unit" placeholder="ورقة / كوب / قطعة"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>السعر المقترح (₪)</label><input id="i_price" type="number" step="0.1"></div>
+      <div class="field"><label>الكمية الحالية بالمخزون</label><input id="i_stock" type="number" step="1"></div>
+      <div class="field"><label>حد التنبيه الأدنى</label><input id="i_min" type="number" step="1"></div>
+    </div>
+    <button class="btn" onclick="addItem()">إضافة الصنف</button>
+  </div>
+  <div class="card">
+    <h2>كل الأصناف والخدمات</h2>
+    <div class="overflow"><table id="itemsTable"><thead><tr>
+      <th>الاسم</th><th>التصنيف</th><th>السعر</th><th>المخزون</th><th></th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<section id="sales" class="tab">
+  <div class="card">
+    <h2>طلب / فاتورة جديدة</h2>
+    <div class="row">
+      <div class="field"><label>اسم الزبون (اختياري)</label><input id="s_customer"></div>
+    </div>
+    <div class="row">
+      <div class="field" style="flex:2"><label>الصنف</label><select id="s_item"></select></div>
+      <div class="field"><label>الكمية</label><input id="s_qty" type="number" value="1" step="1"></div>
+      <div class="field"><label>السعر للوحدة (₪) — قابل للتعديل</label><input id="s_price" type="number" step="0.1"></div>
+    </div>
+    <button class="btn secondary" onclick="addToCart()">إضافة إلى الفاتورة</button>
+    <div id="cart" style="margin-top:14px"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:2px solid var(--ink)">
+      <strong id="cartTotal">الإجمالي: 0 ₪</strong>
+      <button class="btn" onclick="checkout()">تأكيد وحفظ الفاتورة</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>آخر الفواتير</h2>
+    <div id="salesList"></div>
+  </div>
+</section>
+
+<section id="reports" class="tab">
+  <div class="card">
+    <h2>ملخص المبيعات</h2>
+    <div class="row">
+      <div class="field"><label>من تاريخ</label><input id="r_from" type="date"></div>
+      <div class="field"><label>إلى تاريخ</label><input id="r_to" type="date"></div>
+      <div class="field" style="align-self:flex-end"><button class="btn secondary" onclick="renderReports()">تحديث</button></div>
+    </div>
+    <div class="stat" id="statBox"></div>
+  </div>
+  <div class="card"><h2>المبيعات حسب التصنيف</h2><div id="catReport"></div></div>
+  <div class="card"><h2>الأصناف الأكثر مبيعًا</h2><div id="topItems"></div></div>
+</section>
+
+<section id="alerts" class="tab">
+  <div class="card">
+    <h2>أصناف اقتربت من النفاد</h2>
+    <div id="alertList"></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+let items=[], sales=[];
+async function load(){
+  try{ items=JSON.parse(localStorage.getItem('ph_items')||'[]'); }catch(e){ items=[]; }
+  try{ sales=JSON.parse(localStorage.getItem('ph_sales')||'[]'); }catch(e){ sales=[]; }
+}
+function saveItems(){ try{ localStorage.setItem('ph_items',JSON.stringify(items)); }catch(e){} }
+function saveSales(){ try{ localStorage.setItem('ph_sales',JSON.stringify(sales)); }catch(e){} }
+
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); document.getElementById(b.dataset.tab).classList.add('active');
+  if(b.dataset.tab==='reports') renderReports();
+  if(b.dataset.tab==='alerts') renderAlerts();
+  if(b.dataset.tab==='sales') fillItemSelect();
+}));
+
+function addItem(){
+  const name=document.getElementById('i_name').value.trim();
+  if(!name){ alert('اكتب اسم الصنف'); return; }
+  items.push({
+    id:Date.now().toString(36),
+    name, category:document.getElementById('i_cat').value,
+    unit:document.getElementById('i_unit').value.trim()||'قطعة',
+    price:parseFloat(document.getElementById('i_price').value)||0,
+    stock:parseFloat(document.getElementById('i_stock').value)||0,
+    min:parseFloat(document.getElementById('i_min').value)||0
+  });
+  saveItems();
+  ['i_name','i_unit','i_price','i_stock','i_min'].forEach(id=>document.getElementById(id).value='');
+  renderItems();
+}
+function deleteItem(id){ items=items.filter(i=>i.id!==id); saveItems(); renderItems(); }
+function renderItems(){
+  const tb=document.querySelector('#itemsTable tbody'); tb.innerHTML='';
+  if(!items.length){ tb.innerHTML='<tr><td colspan="5" class="empty">لا يوجد أصناف بعد</td></tr>'; }
+  items.forEach(it=>{
+    const tr=document.createElement('tr');
+    if(it.stock<=it.min) tr.className='low';
+    tr.innerHTML=`<td>${it.name}</td><td><span class="tag">${it.category}</span></td>
+      <td>${it.price.toFixed(1)} ₪</td><td>${it.stock} ${it.unit}</td>
+      <td><button class="btn small secondary" onclick="deleteItem('${it.id}')">حذف</button></td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('alertCount').textContent = items.filter(i=>i.stock<=i.min).length ? '●' : '';
+}
+
+let cart=[];
+function fillItemSelect(){
+  const sel=document.getElementById('s_item'); sel.innerHTML='';
+  items.forEach(it=>{ const o=document.createElement('option'); o.value=it.id; o.textContent=`${it.name} (${it.price.toFixed(1)} ₪)`; sel.appendChild(o); });
+  sel.onchange=()=>{ const it=items.find(i=>i.id===sel.value); if(it) document.getElementById('s_price').value=it.price; };
+  if(items.length) sel.onchange();
+}
+function addToCart(){
+  const it=items.find(i=>i.id===document.getElementById('s_item').value);
+  if(!it){ alert('أضف أصناف أولًا من تبويب الأصناف'); return; }
+  const qty=parseFloat(document.getElementById('s_qty').value)||1;
+  const price=parseFloat(document.getElementById('s_price').value)||it.price;
+  cart.push({itemId:it.id,name:it.name,qty,price,total:qty*price});
+  renderCart();
+}
+function removeFromCart(i){ cart.splice(i,1); renderCart(); }
+function renderCart(){
+  const box=document.getElementById('cart'); box.innerHTML='';
+  cart.forEach((c,i)=>{
+    const d=document.createElement('div'); d.className='cart-item';
+    d.innerHTML=`<span>${c.name} × ${c.qty}</span><span>${c.total.toFixed(1)} ₪ <span class="x" onclick="removeFromCart(${i})">×</span></span>`;
+    box.appendChild(d);
+  });
+  const total=cart.reduce((s,c)=>s+c.total,0);
+  document.getElementById('cartTotal').textContent='الإجمالي: '+total.toFixed(1)+' ₪';
+}
+function checkout(){
+  if(!cart.length){ alert('أضف أصناف للفاتورة'); return; }
+  const total=cart.reduce((s,c)=>s+c.total,0);
+  sales.push({id:Date.now().toString(36), date:new Date().toISOString().slice(0,10), customer:document.getElementById('s_customer').value.trim(), items:cart, total});
+  cart.forEach(c=>{ const it=items.find(i=>i.id===c.itemId); if(it) it.stock=Math.max(0,it.stock-c.qty); });
+  saveSales(); saveItems();
+  cart=[]; renderCart(); document.getElementById('s_customer').value=''; renderItems(); renderSalesList();
+}
+function renderSalesList(){
+  const box=document.getElementById('salesList'); box.innerHTML='';
+  if(!sales.length){ box.innerHTML='<div class="empty">لا توجد فواتير بعد</div>'; return; }
+  sales.slice().reverse().slice(0,15).forEach(s=>{
+    const d=document.createElement('div'); d.className='cart-item';
+    d.innerHTML=`<span>${s.date} ${s.customer?'— '+s.customer:''} (${s.items.length} صنف)</span><span>${s.total.toFixed(1)} ₪</span>`;
+    box.appendChild(d);
+  });
+}
+
+function renderReports(){
+  const from=document.getElementById('r_from').value, to=document.getElementById('r_to').value;
+  const filtered=sales.filter(s=> (!from||s.date>=from) && (!to||s.date<=to) );
+  const total=filtered.reduce((s,x)=>s+x.total,0);
+  document.getElementById('statBox').innerHTML=`
+    <div><div class="num">${total.toFixed(1)}</div><div class="lbl">إجمالي المبيعات (₪)</div></div>
+    <div><div class="num">${filtered.length}</div><div class="lbl">عدد الفواتير</div></div>
+    <div><div class="num">${(total/(filtered.length||1)).toFixed(1)}</div><div class="lbl">متوسط الفاتورة (₪)</div></div>`;
+  const byCat={};
+  filtered.forEach(s=>s.items.forEach(it=>{ const cat=(items.find(i=>i.id===it.itemId)||{}).category||'غير مصنف'; byCat[cat]=(byCat[cat]||0)+it.total; }));
+  const catBox=document.getElementById('catReport'); catBox.innerHTML='';
+  const catEntries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  if(!catEntries.length) catBox.innerHTML='<div class="empty">لا توجد بيانات لهذه الفترة</div>';
+  catEntries.forEach(([cat,val])=>{
+    const d=document.createElement('div'); d.className='cart-item';
+    d.innerHTML=`<span class="tag">${cat}</span><span>${val.toFixed(1)} ₪</span>`; catBox.appendChild(d);
+  });
+  const byItem={};
+  filtered.forEach(s=>s.items.forEach(it=>{ byItem[it.name]=(byItem[it.name]||0)+it.qty; }));
+  const topBox=document.getElementById('topItems'); topBox.innerHTML='';
+  const topEntries=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!topEntries.length) topBox.innerHTML='<div class="empty">لا توجد بيانات لهذه الفترة</div>';
+  topEntries.forEach(([name,qty])=>{
+    const d=document.createElement('div'); d.className='cart-item';
+    d.innerHTML=`<span>${name}</span><span>${qty}</span>`; topBox.appendChild(d);
+  });
+}
+
+function renderAlerts(){
+  const box=document.getElementById('alertList'); box.innerHTML='';
+  const low=items.filter(i=>i.stock<=i.min);
+  if(!low.length){ box.innerHTML='<div class="empty">لا توجد أصناف منخفضة المخزون حاليًا</div>'; return; }
+  low.forEach(it=>{
+    const d=document.createElement('div'); d.className='alert-item';
+    d.innerHTML=`<span>${it.name} — متبقٍ ${it.stock} ${it.unit}</span><span class="tag">الحد الأدنى: ${it.min}</span>`;
+    box.appendChild(d);
+  });
+}
+
+load().then(()=>{ renderItems(); renderSalesList(); fillItemSelect(); renderAlerts(); });
+</script>
+</body>
+</html>
